@@ -4,6 +4,7 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
+import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -32,19 +33,55 @@ public class channel extends javax.swing.JFrame {
         initComponents();
         AutoId();
         Showtable();
+        loadDoctor();
+        loadPatient();
     }
     Connection conn = dbconnection.getConnection();
         PreparedStatement st;
         ResultSet rs;
+        public class doctor{
+                String id;
+                String name;
+                public doctor(String id, String name){
+                    this.id = id;
+                    this.name = name;
+                }
+                public String toString(){
+                    return name;
+                }
+        }
+         public class patient {
+                String id;
+                String name;
+                public patient(String id, String name){
+                    this.id = id;
+                    this.name = name;
+                }
+                public String toString(){
+                    return name;
+                }
+        }
         
-        
+       public void loadPatient(){
+           try{
+               st = conn.prepareStatement("select * from patient");
+               rs =st.executeQuery();
+               txtpName.removeAll();
+               while(rs.next()){
+                   txtpName.addItem(new patient(rs.getString(1),rs.getString(3)));
+               }
+               
+           } catch (SQLException ex) {
+            Logger.getLogger(channel.class.getName()).log(Level.SEVERE, null, ex);
+        }
+       }
        public void loadDoctor(){
            try{
                st = conn.prepareStatement("select * from doctor");
                rs =st.executeQuery();
                txtdoctName.removeAll();
                while(rs.next()){
-                   txtdoctName.addItem(new doctor(rs.getString(1),rs.getString(2)));
+                   txtdoctName.addItem(new patient(rs.getString(1),rs.getString(3)));
                }
                
            } catch (SQLException ex) {
@@ -92,7 +129,7 @@ public class channel extends javax.swing.JFrame {
         jLabel5 = new javax.swing.JLabel();
         txtchannelNo = new javax.swing.JTextField();
         txtdoctName = new javax.swing.JComboBox();
-        txtpName = new javax.swing.JComboBox<>();
+        txtpName = new javax.swing.JComboBox();
         jLabel6 = new javax.swing.JLabel();
         txtroomNo = new javax.swing.JSpinner();
         txtdate = new com.toedter.calendar.JDateChooser();
@@ -200,6 +237,11 @@ public class channel extends javax.swing.JFrame {
         });
 
         jButton2.setText("cancel");
+        jButton2.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                jButton2ActionPerformed(evt);
+            }
+        });
 
         jTable1.setModel(new javax.swing.table.DefaultTableModel(
             new Object [][] {
@@ -289,10 +331,11 @@ public class channel extends javax.swing.JFrame {
     private void jButton1ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButton1ActionPerformed
         // TODO add your handling code here:
         String channelNo= txtchannelNo.getText();
-        String doctname =txtdoctName.getSelectedItem().toString();
-        String patientName = txtpName.getSelectedItem().toString();
+        doctor doctname =(doctor)txtdoctName.getSelectedItem();
+       // patient patientName = (patient)txtpName.getSelectedItem();
         String room =  txtroomNo.getValue().toString();
-        Date date = txtdate.getDate();
+        SimpleDateFormat dateformat = new SimpleDateFormat("yyy-mm-dd");
+        String  date = dateformat.format(txtdate.getDate());
         
         Connection con = dbconnection.getConnection();
         PreparedStatement pst;
@@ -301,10 +344,10 @@ public class channel extends javax.swing.JFrame {
         try {
             pst = con.prepareStatement("insert into channel(channelNo,doctorName,patientName,roomNo,channelDate)values(?,?,?,?,?)");
             pst.setString(1, channelNo);
-            pst.setString(2,doctname);
-            pst.setString(3,patientName);
+            pst.setString(2,doctname.name);
+           // pst.setString(3,patientName.name);
             pst.setString(4, room);
-            pst.setDate(5, (java.sql.Date) date);
+            pst.setString(5,date);
             
             pst.executeUpdate();
             Showtable();
@@ -312,9 +355,10 @@ public class channel extends javax.swing.JFrame {
             JOptionPane.showMessageDialog(this,"channel inserted");
             AutoId();
             txtchannelNo.setText("");
-            txtdoctName.setSelectedItem("");
-            txtpName.setSelectedItem("");
-            txtroomNo.setValue("");
+            txtdoctName.setSelectedIndex(-1);
+            txtpName.setSelectedIndex(-1);
+            txtroomNo.setValue(0);
+            
            
         } catch (SQLException ex) {
             Logger.getLogger(user.class.getName()).log(Level.SEVERE, null, ex);
@@ -332,6 +376,13 @@ public class channel extends javax.swing.JFrame {
         txtdate.setDate((Date) model.getValueAt(rowIndex, 5));
         Showtable();
     }//GEN-LAST:event_jTable1MouseClicked
+
+    private void jButton2ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButton2ActionPerformed
+        // TODO add your handling code here:
+        dispose();
+        main currentWindow = new main();
+        currentWindow.setVisible(true);
+    }//GEN-LAST:event_jButton2ActionPerformed
 
      public void Showtable(){
         Connection conn = null;
@@ -434,7 +485,7 @@ public class channel extends javax.swing.JFrame {
     private javax.swing.JTextField txtchannelNo;
     private com.toedter.calendar.JDateChooser txtdate;
     private javax.swing.JComboBox txtdoctName;
-    private javax.swing.JComboBox<String> txtpName;
+    private javax.swing.JComboBox txtpName;
     private javax.swing.JSpinner txtroomNo;
     // End of variables declaration//GEN-END:variables
 }
